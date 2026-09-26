@@ -9,6 +9,9 @@
 /* Returns a monotonic timestamp in milliseconds. */
 uint64_t get_now_ms(void);
 
+/* Returns a monotonic timestamp in microseconds (finer RTT resolution). */
+uint64_t get_now_us(void);
+
 /* Allocates and initializes an STP packet. Caller owns the returned packet. */
 mixnet_packet* create_stp_packet(mixnet_address root,
                                  uint16_t path_len,

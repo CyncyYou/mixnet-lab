@@ -12,6 +12,12 @@ uint64_t get_now_ms(void) {
     return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
 }
 
+uint64_t get_now_us(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000 + (uint64_t)ts.tv_nsec / 1000;
+}
+
 mixnet_packet* create_stp_packet(mixnet_address root,
                                  uint16_t path_len,
                                  mixnet_address node_addr) {

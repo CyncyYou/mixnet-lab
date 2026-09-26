@@ -263,11 +263,14 @@ void run_node(void *const handle,
                             outp = build_data_packet(pkt, c.node_addr, dst,
                                                      route_buf, rlen);
                         } else {
-                            mixnet_packet_ping *up =
-                                (mixnet_packet_ping*)(pkt->payload +
-                                    sizeof(mixnet_packet_routing_header));
+                            // Stamp the request with our own send time (in us)
+                            // so that when the response returns to us, we can
+                            // compute RTT using a single clock (this node's),
+                            // avoiding cross-node clock-skew. (The user-provided
+                            // send_time is ignored for this reason.)
+                            uint64_t send_us = get_now_us();
                             outp = build_ping_packet(c.node_addr, dst, route_buf,
-                                                     rlen, up->send_time);
+                                                     rlen, send_us);
                         }
                         free(pkt);
 
@@ -336,6 +339,16 @@ void run_node(void *const handle,
                                 }
                             } else {
                                 // Response arrived back at original sender.
+                                // Compute RTT with this node's own clock: the
+                                // send_time was stamped by us (in us) when we
+                                // injected the request, so `now - send_time`
+                                // is the full round-trip time, unaffected by
+                                // cross-node clock skew.
+                                uint64_t rtt_us = get_now_us() - ping->send_time;
+                                printf("RTT to %u: %.3f ms\n",
+                                       (unsigned)rh->src_address,
+                                       (double)rtt_us / 1000.0);
+                                fflush(stdout);
                                 safe_send(handle, n, pkt);
                             }
                         } else {
